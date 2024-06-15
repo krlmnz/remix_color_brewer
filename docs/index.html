@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Swatches Directory</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .swatch-table {
+            width: 100%;
+            margin-top: 16px;
+        }
+        .swatch-cell {
+            width: 40px;
+            height: 40px;
+        }
+        .swatch-text {
+            margin-top: 8px;
+            text-align: center;
+            color: black;
+            font-size: 12px;
+        }
+        .utility-bar {
+            margin-top: 16px;
+        }
+        .utility-bar input {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="mt-4">Color Swatches Directory</h1>
+
+    <div class="utility-bar">
+        <label for="hue">Hue:</label>
+        <input type="range" id="hue" name="hue" min="0" max="360">
+        <label for="saturation">Saturation:</label>
+        <input type="range" id="saturation" name="saturation" min="0" max="100">
+        <label for="lightness">Lightness:</label>
+        <input type="range" id="lightness" name="lightness" min="0" max="100">
+        <button id="reload" class="btn btn-primary">Reload</button>
+    </div>
+
+    <div id="swatch-container" class="swatch-container mt-4"></div>
+</div>
+
+<script>
+    const defaultColorSwatches = [
+        ['#efedf5', '#bcbddc', '#756bb1'],
+        ['#f2f0f7', '#cbc9e2', '#9e9ac8', '#6a51a3'],
+        ['#f2f0f7', '#cbc9e2', '#9e9ac8', '#756bb1', '#54278f'],
+        ['#f2f0f7', '#dadaeb', '#bcbddc', '#9e9ac8', '#756bb1', '#54278f'],
+        ['#f2f0f7', '#dadaeb', '#bcbddc', '#9e9ac8', '#807dba', '#6a51a3', '#4a1486'],
+        ['#fcfbfd', '#efedf5', '#dadaeb', '#bcbddc', '#9e9ac8', '#807dba', '#6a51a3', '#4a1486'],
+        ['#fcfbfd', '#efedf5', '#dadaeb', '#bcbddc', '#9e9ac8', '#807dba', '#6a51a3', '#54278f', '#3f007d'],
+        ['#deebf7', '#9ecae1', '#3182bd'],
+        ['#eff3ff', '#bdd7e7', '#6baed6', '#2171b5'],
+        ['#eff3ff', '#bdd7e7', '#6baed6', '#3182bd', '#08519c'],
+        ['#eff3ff', '#c6dbef', '#9ecae1', '#6baed6', '#3182bd', '#08519c'],
+        ['#eff3ff', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#084594'],
+        ['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#084594'],
+        ['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#08519c', '#08306b'],
+        ['#e5f5e0', '#a1d99b', '#31a354'],
+        ['#edf8e9', '#bae4b3', '#74c476', '#238b45'],
+        ['#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c'],
+        ['#edf8e9', '#c7e9c0', '#a1d99b', '#74c476', '#31a354', '#006d2c'],
+        ['#edf8e9', '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#005a32'],
+        ['#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#005a32'],
+        ['#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#006d2c', '#00441b'],
+        ['#fee6ce', '#fdae6b', '#e6550d'],
+        ['#feedde', '#fdbe85', '#fd8d3c', '#d94701'],
+        ['#feedde', '#fdbe85', '#fd8d3c', '#e6550d', '#a63603'],
+        ['#feedde', '#fdd0a2', '#fdae6b', '#fd8d3c', '#e6550d', '#a63603'],
+        ['#feedde', '#fdd0a2', '#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#8c2d04'],
+        ['#fff5eb', '#fee6ce', '#fdd0a2', '#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#8c2d04'],
+        ['#fff5eb', '#fee6ce', '#fdd0a2', '#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#a63603', '#7f2704'],
+        ['#fee0d2', '#fc9272', '#de2d26'],
+        ['#fee5d9', '#fcae91', '#fb6a4a', '#cb181d'],
+        ['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15'],
+        ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26', '#a50f15'],
+        ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'],
+        ['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'],
+        ['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d'],
+        ['#f0f0f0', '#bdbdbd', '#636363'],
+        ['#f7f7f7', '#cccccc', '#969696', '#525252'],
+        ['#f7f7f7', '#cccccc', '#969696', '#636363', '#252525'],
+        ['#f7f7f7', '#d9d9d9', '#bdbdbd', '#969696', '#636363', '#252525'],
+        ['#f7f7f7', '#d9d9d9', '#bdbdbd', '#969696', '#737373', '#525252', '#252525'],
+        ['#ffffff', '#f0f0f0', '#d9d9d9', '#bdbdbd', '#969696', '#737373', '#525252', '#252525'],
+        ['#ffffff', '#f0f0f0', '#d9d9d9', '#bdbdbd', '#969696', '#737373', '#525252', '#252525', '#000000']
+    ];
+
+    let colorSwatches = JSON.parse(JSON.stringify(defaultColorSwatches));
+
+    const swatchContainer = document.getElementById('swatch-container');
+
+    function renderTable() {
+        swatchContainer.innerHTML = '';
+
+        const table = document.createElement('table');
+        table.className = 'table table-bordered swatch-table';
+
+        const tbody = document.createElement('tbody');
+
+        colorSwatches.forEach(swatchSet => {
+            const row = document.createElement('tr');
+
+            swatchSet.forEach(color => {
+                const cell = document.createElement('td');
+                cell.className = 'swatch-cell';
+                cell.style.backgroundColor = color;
+
+                const colorText = document.createElement('div');
+                colorText.className = 'swatch-text';
+                colorText.textContent = color;
+
+                cell.appendChild(colorText);
+                row.appendChild(cell);
+            });
+
+            tbody.appendChild(row);
+        });
+
+        table.appendChild(tbody);
+        swatchContainer.appendChild(table);
+    }
+
+    function adjustColor(hueShift, saturation, lightness) {
+        colorSwatches = defaultColorSwatches.map(swatchSet =>
+            swatchSet.map(color => {
+                let [h, s, l] = hexToHSL(color);
+                h = (h + hueShift) % 360;
+                s = Math.min(Math.max(s + saturation, 0), 100);
+                l = Math.min(Math.max(l + lightness, 0), 100);
+                return HSLToHex(h, s, l);
+            })
+        );
+        renderTable();
+    }
+
+    function hexToHSL(H) {
+        // Convert hex to RGB first
+        let r = 0, g = 0, b = 0;
+        if (H.length == 4) {
+            r = "0x" + H[1] + H[1];
+            g = "0x" + H[2] + H[2];
+            b = "0x" + H[3] + H[3];
+        } else if (H.length == 7) {
+            r = "0x" + H[1] + H[2];
+            g = "0x" + H[3] + H[4];
+            b = "0x" + H[5] + H[6];
+        }
+        r /= 255;
+        g /= 255;
+        b /= 255;
+        let cmin = Math.min(r, g, b),
+            cmax = Math.max(r, g, b),
+            delta = cmax - cmin,
+            h = 0,
+            s = 0,
+            l = 0;
+
+        if (delta == 0)
+            h = 0;
+        else if (cmax == r)
+            h = ((g - b) / delta) % 6;
+        else if (cmax == g)
+            h = (b - r) / delta + 2;
+        else
+            h = (r - g) / delta + 4;
+
+        h = Math.round(h * 60);
+
+        if (h < 0)
+            h += 360;
+
+        l = (cmax + cmin) / 2;
+        s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+        s = +(s * 100).toFixed(1);
+        l = +(l * 100).toFixed(1);
+
+        return [h, s, l];
+    }
+
+    function HSLToHex(h, s, l) {
+        s /= 100;
+        l /= 100;
+        let c = (1 - Math.abs(2 * l - 1)) * s,
+            x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+            m = l - c / 2,
+            r = 0,
+            g = 0,
+            b = 0;
+
+        if (0 <= h && h < 60) {
+            r = c;
+            g = x;
+            b = 0;
+        } else if (60 <= h && h < 120) {
+            r = x;
+            g = c;
+            b = 0;
+        } else if (120 <= h && h < 180) {
+            r = 0;
+            g = c;
+            b = x;
+        } else if (180 <= h && h < 240) {
+            r = 0;
+            g = x;
+            b = c;
+        } else if (240 <= h && h < 300) {
+            r = x;
+            g = 0;
+            b = c;
+        } else if (300 <= h && h < 360) {
+            r = c;
+            g = 0;
+            b = x;
+        }
+        r = Math.round((r + m) * 255).toString(16);
+        g = Math.round((g + m) * 255).toString(16);
+        b = Math.round((b + m) * 255).toString(16);
+
+        if (r.length == 1)
+            r = "0" + r;
+        if (g.length == 1)
+            g = "0" + g;
+        if (b.length == 1)
+            b = "0" + b;
+
+        return "#" + r + g + b;
+    }
+
+    document.getElementById('hue').addEventListener('input', (e) => {
+        const hueShift = parseInt(e.target.value);
+        const saturation = parseInt(document.getElementById('saturation').value);
+        const lightness = parseInt(document.getElementById('lightness').value);
+        adjustColor(hueShift, saturation, lightness);
+    });
+
+    document.getElementById('saturation').addEventListener('input', (e) => {
+        const saturation = parseInt(e.target.value);
+        const hueShift = parseInt(document.getElementById('hue').value);
+        const lightness = parseInt(document.getElementById('lightness').value);
+        adjustColor(hueShift, saturation, lightness);
+    });
+
+    document.getElementById('lightness').addEventListener('input', (e) => {
+        const lightness = parseInt(e.target.value);
+        const hueShift = parseInt(document.getElementById('hue').value);
+        const saturation = parseInt(document.getElementById('saturation').value);
+        adjustColor(hueShift, saturation, lightness);
+    });
+
+    document.getElementById('reload').addEventListener('click', () => {
+        colorSwatches = JSON.parse(JSON.stringify(defaultColorSwatches));
+        renderTable();
+    });
+
+    renderTable();
+</script>
+
+</body>
+</html>
